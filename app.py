@@ -1,6 +1,26 @@
 from flask import Flask, render_template, request
 from sklearn.tree import DecisionTreeClassifier
 import pickle
+import psycopg2
+
+def postgresql_connent():
+    conn = psycopg2.connect(database="Iris",
+                            host="127.0.0.1",
+                            user="postgres",
+                            password="password",
+                            port="5432")
+    return conn
+
+def generate_html_table(rows):
+    html = "<table>\n"
+    for row in rows:
+        html += "\t<tr>\n"
+        for cell in row:
+            html += f"\t\t<td>{cell}</td>\n"
+        html += "\t</tr>\n"
+    html += "</table>"
+    return html
+
 
 dct = pickle.load(open('dct.pkl', 'rb'))
 
@@ -15,11 +35,26 @@ def index():
         petal_width = float(request.form['petal_width'])
         iris_array = [[sepal_length, sepal_width, petal_length,petal_width]]
         prediction = dct.predict(iris_array)
+        conn = postgresql_connent()
+        cur = conn.cursor()
+        cur.execute(f"INSERT INTO iris(sepal_length, sepal_width, petal_length, petal_width, prediction) VALUES ({sepal_length}, {sepal_width}, {petal_length}, {petal_width}, '{prediction[0]}');")
+        conn.commit()
+        conn.close()
         return render_template("index.html", prediction = prediction[0].capitalize())
     else:
         return render_template("index.html")
+
+@app.route('/All_result')
+def all_result():
+    conn = postgresql_connent()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM iris")
+    data = cur.fetchall()
+    conn.close()
+    return render_template("all_result.html", data=data)
 
 
 
 if __name__ == '__main__':
     app.run()
+    
