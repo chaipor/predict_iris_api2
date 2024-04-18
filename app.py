@@ -11,17 +11,6 @@ def postgresql_connent():
                             port="5432")
     return conn
 
-def generate_html_table(rows):
-    html = "<table>\n"
-    for row in rows:
-        html += "\t<tr>\n"
-        for cell in row:
-            html += f"\t\t<td>{cell}</td>\n"
-        html += "\t</tr>\n"
-    html += "</table>"
-    return html
-
-
 dct = pickle.load(open('dct.pkl', 'rb'))
 
 app = Flask(__name__)
